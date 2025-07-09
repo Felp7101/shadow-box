@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <title>Monitor de Hábitos</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      background-color: #f9f9f9;
+      padding: 20px 15px;
+      color: #111;
+      min-height: 100vh;
+    }
+    
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+      position: relative;
+      overflow: hidden;
+      z-index: 1;
+    }
+
+    header h1 {
+      font-size: clamp(1.5rem, 5vw, 2rem);
+      margin-bottom: 5px;
+    }
+
+    header p {
+      color: #555;
+      font-size: clamp(0.9rem, 3vw, 1rem);
+    }
+    
+    .container {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+      z-index: 1;
+    }
+
+    .box {
+      background: #fff;
+      border-radius: 10px;
+      padding: 15px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .habits-header {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .habits-header h2 {
+      font-size: clamp(1rem, 4vw, 1.2rem);
+    }
+
+    .habits-header button {
+      padding: 12px 16px;
+      background: #000;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background-color 0.2s;
+    }
+
+    .habits-header button:hover {
+      background: #333;
+    }
+
+    .search {
+      width: 100%;
+      margin-bottom: 20px;
+    }
+
+    .search input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px; /* Evita zoom no iOS */
+    }
+
+    .habit-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      background-color: #f4f4f4;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 10px;
+      min-height: 60px;
+    }
+
+    .habit-info {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      flex: 1;
+    }
+
+    .habit-text h4 {
+      margin-bottom: 5px;
+      font-size: clamp(0.9rem, 3.5vw, 1rem);
+      line-height: 1.3;
+    }
+
+    .habit-text p {
+      color: #666;
+      font-size: clamp(0.8rem, 3vw, 0.9rem);
+      line-height: 1.3;
+    }
+
+    .habit-item .delete-btn {
+      background: none;
+      border: none;
+      color: #888;
+      cursor: pointer;
+      font-size: 1.2rem;
+      padding: 8px;
+      border-radius: 4px;
+      transition: all 0.2s;
+      margin-left: 10px;
+      flex-shrink: 0;
+    }
+
+    .habit-item .delete-btn:hover {
+      color: #ff4444;
+      background: rgba(255, 68, 68, 0.1);
+    }
+
+    /* Custom Checkbox Styling - SelfMadeSystem Style */
+    .checkbox-container {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      margin-right: 10px;
+      flex-shrink: 0;
+    }
+
+    .checkbox-container input {
+      display: none;
+    }
+
+    .checkbox-container svg {
+      overflow: visible;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-self: center;
+    }
+
+    .path {
+      fill: none;
+      stroke: #111;
+      stroke-width: 6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: stroke-dasharray 0.5s ease, stroke-dashoffset 0.5s ease;
+      stroke-dasharray: 241 9999999;
+      stroke-dashoffset: 0;
+    }
+
+    .checkbox-container input:checked ~ svg .path {
+      stroke-dasharray: 70.5096664428711 9999999;
+      stroke-dashoffset: -262.2723388671875;
+    }
+
+    .main-content {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    .today, .calendar {
+      background: #fff;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      margin-top: 5px;
+    }
+
+    .today h3, .calendar h3 {
+      margin-bottom: 10px;
+      font-size: clamp(1rem, 4vw, 1.1rem);
+    }
+
+    .today p {
+      font-size: clamp(0.9rem, 3vw, 1rem);
+      color: #666;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      text-align: center;
+    }
+
+    .calendar-grid div {
+      padding: 8px 4px;
+      border-radius: 50%;
+      background-color: #eee;
+      width: 100%;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(0.7rem, 2.5vw, 0.9rem);
+      aspect-ratio: 1;
+    }
+
+    .calendar-grid .active {
+      background-color: #111;
+      color: white;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .stat-card {
+      background: #fff;
+      padding: 15px;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .stat-card h4 {
+      margin-bottom: 8px;
+      color: #666;
+      font-size: clamp(0.8rem, 3vw, 0.9rem);
+    }
+
+    .stat-card p {
+      font-size: clamp(1.2rem, 5vw, 1.5rem);
+      font-weight: bold;
+    }
+
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .modal.show {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 1;
+    }
+
+    .modal-content {
+      background: #fff;
+      margin: 15px;
+      padding: 20px;
+      border-radius: 10px;
+      width: 100%;
+      max-width: 500px;
+      transform: translateY(-20px);
+      transition: transform 0.3s ease;
+    }
+
+    .modal.show .modal-content {
+      transform: translateY(0);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .modal-header h3 {
+      font-size: 1.2rem;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #666;
+      padding: 0;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .close-btn:hover {
+      color: #000;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+
+    .form-group input, .form-group textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+
+    .modal-buttons button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background-color 0.2s;
+    }
+
+    .btn-cancel {
+      background: #f5f5f5;
+      color: #666;
+    }
+
+    .btn-cancel:hover {
+      background: #e0e0e0;
+    }
+
+    .btn-save {
+      background: #000;
+      color: white;
+    }
+
+    .btn-save:hover {
+      background: #333;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #666;
+    }
+
+    .empty-state i {
+      font-size: 3rem;
+      margin-bottom: 15px;
+      opacity: 0.5;
+    }
+
+    /* Particle Animation */
+    .body-particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: -1;
+    }
+
+    .particle {
+      position: absolute;
+      background-color: #000;
+      border-radius: 50%;
+      opacity: 75%;
+      animation: floatAndFade var(--duration, 4s) ease-in-out forwards;
+    }
+
+    @keyframes floatAndFade {
+      0% {
+        transform: translate(0, 0) scale(0.5);
+        opacity: 0;
+      }
+      10% {
+        opacity: 1;
+      }
+      90% {
+        opacity: 1;
+      }
+      100% {
+        transform: translate(
+          calc(var(--endX) - var(--startX, 0px)),
+          calc(var(--endY) - var(--startY, 0px))
+        ) scale(1.2);
+        opacity: 0;
+      }
+    }
+
+    /* Media Queries para diferentes dispositivos */
+    
+    /* Tablets pequenos e paisagem de celulares */
+    @media (min-width: 576px) {
+      body {
+        padding: 25px 20px;
+      }
+      
+      .habits-header {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+      }
+      
+      .stats {
+        grid-template-columns: repeat(4, 1fr);
+      }
+      
+      .box {
+        padding: 20px;
+      }
+      
+      .today, .calendar {
+        padding: 20px;
+      }
+    }
+
+    /* Tablets */
+    @media (min-width: 768px) {
+      body {
+        padding: 30px 25px;
+      }
+      
+      .container {
+        gap: 25px;
+      }
+      
+      .main-content {
+        grid-template-columns: 2fr 1fr;
+        gap: 25px;
+      }
+      
+      .calendar-grid {
+        gap: 6px;
+      }
+      
+      .calendar-grid div {
+        height: 45px;
+      }
+    }
+
+    /* Desktops pequenos */
+    @media (min-width: 992px) {
+      body {
+        padding: 40px 30px;
+      }
+      
+      .container {
+        gap: 30px;
+      }
+      
+      .main-content {
+        gap: 30px;
+      }
+      
+      .calendar-grid {
+        gap: 8px;
+      }
+    }
+
+    /* Desktops grandes */
+    @media (min-width: 1200px) {
+      .container {
+        max-width: 1200px;
+      }
+    }
+
+    /* Ajustes para telas muito pequenas */
+    @media (max-width: 375px) {
+      .habit-item {
+        padding: 12px;
+      }
+      
+      .checkbox-container svg {
+        width: 20px;
+        height: 20px;
+      }
+      
+      .stats {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      
+      .calendar-grid div {
+        height: 35px;
+        padding: 4px 2px;
+      }
+    }
+
+    /* Melhorias de acessibilidade */
+    @media (prefers-reduced-motion: reduce) {
+      .particle {
+        animation: none;
+      }
+      
+      .path {
+        transition: none;
+      }
+      
+      .habits-header button,
+      .delete-btn {
+        transition: none;
+      }
+    }
+
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+      body {
+        background-color: #1a1a1a;
+        color: #e0e0e0;
+      }
+      
+      .box, .today, .calendar, .stat-card, .modal-content {
+        background: #2a2a2a;
+        color: #e0e0e0;
+      }
+      
+      .habit-item {
+        background-color: #3a3a3a;
+      }
+      
+      .habit-text p {
+        color: #bbb;
+      }
+      
+      .search input, .form-group input, .form-group textarea {
+        background: #3a3a3a;
+        border-color: #555;
+        color: #e0e0e0;
+      }
+      
+      .calendar-grid div {
+        background-color: #3a3a3a;
+        color: #e0e0e0;
+      }
+      
+      .calendar-grid .active {
+        background-color: #fff;
+        color: #111;
+      }
+      
+      .particle {
+        background-color: #fff;
+      }
+      
+      .path {
+        stroke: #e0e0e0;
+      }
+    }
+
+    /* Orientação landscape em celulares */
+    @media (max-height: 500px) and (orientation: landscape) {
+      body {
+        padding: 15px;
+      }
+      
+      header {
+        margin-bottom: 20px;
+      }
+      
+      .container {
+        gap: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Shadow Box</h1>
+    <p>Acompanhe seus hábitos diários</p>
+  </header>
+
+  <div class="container">
+    <div class="main-content">
+      <div>
+        <div class="box">
+          <div class="habits-header">
+            <h2>Meus Hábitos</h2>
+            <button id="add-habit-btn">+ Novo Hábito</button>
+          </div>
+
+          <div class="search">
+            <input type="text" id="search-input" placeholder="Buscar hábitos...">
+          </div>
+
+          <div id="habits-container">
+            <!-- Hábitos serão inseridos aqui dinamicamente -->
+          </div>
+        </div>
+
+        <div class="stats">
+          <div class="stat-card">
+            <h4>Hábitos Ativos</h4>
+            <p id="total-habits">0</p>
+          </div>
+          <div class="stat-card">
+            <h4>Completados Hoje</h4>
+            <p id="completed-habits">0</p>
+          </div>
+          <div class="stat-card">
+            <h4>Taxa de Conclusão</h4>
+            <p id="completion-rate">0%</p>
+          </div>
+          <div class="stat-card">
+            <h4>Sequência Atual</h4>
+            <p id="current-streak">0</p>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="today">
+          <h3>Hoje</h3>
+          <p id="current-date">segunda-feira, 30 de junho de 2025</p>
+        </div>
+
+        <div class="calendar">
+          <h3>Calendário</h3>
+          <div class="calendar-grid">
+            <div>D</div><div>S</div><div>T</div><div>Q</div><div>Q</div><div>S</div><div>S</div>
+            <div>1</div><div>2</div><div>3</div><div>4</div><div>5</div><div>6</div><div>7</div>
+            <div>8</div><div>9</div><div>10</div><div>11</div><div>12</div><div>13</div><div>14</div>
+            <div>15</div><div>16</div><div>17</div><div>18</div><div>19</div><div>20</div><div>21</div>
+            <div>22</div><div>23</div><div>24</div><div>25</div><div>26</div><div>27</div><div>28</div>
+            <div>29</div><div class="active">30</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para adicionar/editar hábitos -->
+  <div id="habit-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modal-title">Novo Hábito</h3>
+        <button class="close-btn" id="close-modal">&times;</button>
+      </div>
+      
+      <form id="habit-form">
+        <div class="form-group">
+          <label for="habit-name">Nome do Hábito</label>
+          <input type="text" id="habit-name" required maxlength="50" placeholder="Ex: Beber 2L de água">
+        </div>
+        
+        <div class="form-group">
+          <label for="habit-description">Descrição (opcional)</label>
+          <textarea id="habit-description" maxlength="100" placeholder="Ex: Manter-se hidratado durante o dia"></textarea>
+        </div>
+        
+        <div class="modal-buttons">
+          <button type="button" class="btn-cancel" id="cancel-btn">Cancelar</button>
+          <button type="submit" class="btn-save">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Particle Animation
+    const body = document.body;
+    const particleContainer = document.createElement("div");
+    particleContainer.classList.add("body-particles");
+    body.appendChild(particleContainer);
+
+    function createParticle() {
+      const particle = document.createElement("div");
+      const size = Math.random() * 3 + 2;
+      const duration = Math.random() * 4 + 3;
+      const startX = Math.random() * 100;
+      const startY = Math.random() * 100;
+      const endX = Math.random() * 100;
+      const endY = Math.random() * 100;
+
+      particle.classList.add("particle");
+      particle.style.width = `${size}px`;
+      particle.style.height = `${size}px`;
+      particle.style.top = `${startY}%`;
+      particle.style.left = `${startX}%`;
+      particle.style.setProperty('--endX', `${endX}%`);
+      particle.style.setProperty('--endY', `${endY}%`);
+      particle.style.setProperty('--startX', `${startX}%`);
+      particle.style.setProperty('--startY', `${startY}%`);
+      particle.style.animationDuration = `${duration}s`;
+
+      particleContainer.appendChild(particle);
+
+      setTimeout(() => {
+        if (particle.parentNode) {
+          particle.remove();
+        }
+      }, duration * 1000);
+    }
+
+    setInterval(createParticle, 200);
+
+    // Habit Tracker Logic
+    class HabitTracker {
+      constructor() {
+        this.habits = this.loadHabits();
+        this.habitIdCounter = this.getNextHabitId();
+        this.currentEditingId = null;
+        
+        this.initializeElements();
+        this.bindEvents();
+        this.renderHabits();
+        this.updateStats();
+        this.setCurrentDate();
+      }
+
+      initializeElements() {
+        this.habitsContainer = document.getElementById('habits-container');
+        this.addHabitBtn = document.getElementById('add-habit-btn');
+        this.searchInput = document.getElementById('search-input');
+        this.modal = document.getElementById('habit-modal');
+        this.modalTitle = document.getElementById('modal-title');
+        this.habitForm = document.getElementById('habit-form');
+        this.habitNameInput = document.getElementById('habit-name');
+        this.habitDescriptionInput = document.getElementById('habit-description');
+        this.closeModalBtn = document.getElementById('close-modal');
+        this.cancelBtn = document.getElementById('cancel-btn');
+        
+        // Stats elements
+        this.totalHabitsEl = document.getElementById('total-habits');
+        this.completedHabitsEl = document.getElementById('completed-habits');
+        this.completionRateEl = document.getElementById('completion-rate');
+        this.currentStreakEl = document.getElementById('current-streak');
+      }
+
+      bindEvents() {
+        this.addHabitBtn.addEventListener('click', () => this.openModal());
+        this.closeModalBtn.addEventListener('click', () => this.closeModal());
+        this.cancelBtn.addEventListener('click', () => this.closeModal());
+        this.habitForm.addEventListener('submit', (e) => this.handleSubmit(e));
+        this.searchInput.addEventListener('input', (e) => this.handleSearch(e));
+        
+        // Close modal when clicking outside
+        this.modal.addEventListener('click', (e) => {
+          if (e.target === this.modal) {
+            this.closeModal();
+          }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && this.modal.classList.contains('show')) {
+            this.closeModal();
+          }
+        });
+      }
+
+      loadHabits() {
+        const defaultHabits = [
+          {
+            id: 1,
+            name: 'Beber 2L de água',
+            description: 'Manter-se hidratado',
+            completed: false,
+            createdAt: new Date().toISOString()
+          },
+          {
+            id: 2,
+            name: 'Exercício físico',
+            description: '30 minutos de atividade',
+            completed: false,
+            createdAt: new Date().toISOString()
+          },
+          {
+            id: 3,
+            name: 'Meditar',
+            description: '10 minutos pela manhã',
+            completed: false,
+            createdAt: new Date().toISOString()
+          },
+          {
+            id: 4,
+            name: 'Ler',
+            description: '20 páginas por dia',
+            completed: false,
+            createdAt: new Date().toISOString()
+          }
+        ];
+
+        // Check if there are saved habits, if not, use default habits
+        const savedHabits = JSON.parse(JSON.stringify(defaultHabits)); // Using in-memory copy
+        return savedHabits;
+      }
+
+      saveHabits() {
+        // In a real app, this would save to localStorage or a database
+        // For now, we'll just keep the data in memory during the session
+        console.log('Habits saved:', this.habits);
+      }
+
+      getNextHabitId() {
+        return this.habits.length > 0 ? Math.max(...this.habits.map(h => h.id)) + 1 : 1;
+      }
+
+      openModal(habitId = null) {
+        this.currentEditingId = habitId;
+        
+        if (habitId) {
+          const habit = this.habits.find(h => h.id === habitId);
+          this.modalTitle.textContent = 'Editar Hábito';
+          this.habitNameInput.value = habit.name;
+          this.habitDescriptionInput.value = habit.description || '';
+        } else {
+          this.modalTitle.textContent = 'Novo Hábito';
+          this.habitNameInput.value = '';
+          this.habitDescriptionInput.value = '';
+        }
+        
+        this.modal.style.display = 'block';
+        setTimeout(() => {
+          this.modal.classList.add('show');
+          this.habitNameInput.focus();
+        }, 10);
+      }
+
+      closeModal() {
+        this.modal.classList.remove('show');
+        setTimeout(() => {
+          this.modal.style.display = 'none';
+          this.currentEditingId = null;
+        }, 300);
+      }
+
+      handleSubmit(e) {
+        e.preventDefault();
+        
+        const name = this.habitNameInput.value.trim();
+        const description = this.habitDescriptionInput.value.trim();
+        
+        if (!name) return;
+
+        if (this.currentEditingId) {
+          // Edit existing habit
+          const habitIndex = this.habits.findIndex(h => h.id === this.currentEditingId);
+          this.habits[habitIndex] = {
+            ...this.habits[habitIndex],
+            name,
+            description
+          };
+        } else {
+          // Add new habit
+          const newHabit = {
+            id: this.habitIdCounter++,
+            name,
+            description,
+            completed: false,
+            createdAt: new Date().toISOString()
+          };
+          this.habits.push(newHabit);
+        }
+
+        this.saveHabits();
+        this.renderHabits();
+        this.updateStats();
+        this.closeModal();
+      }
+
+      deleteHabit(habitId) {
+        if (confirm('Tem certeza que deseja excluir este hábito?')) {
+          this.habits = this.habits.filter(h => h.id !== habitId);
+          this.saveHabits();
+          this.renderHabits();
+          this.updateStats();
+        }
+      }
+
+      toggleHabit(habitId) {
+        const habit = this.habits.find(h => h.id === habitId);
+        habit.completed = !habit.completed;
+        this.saveHabits();
+        this.updateStats();
+      }
+
+      handleSearch(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        this.renderHabits(searchTerm);
+      }
+
+      renderHabits(searchTerm = '') {
+        const filteredHabits = this.habits.filter(habit =>
+          habit.name.toLowerCase().includes(searchTerm) ||
+          (habit.description && habit.description.toLowerCase().includes(searchTerm))
+        );
+
+        if (filteredHabits.length === 0) {
+          this.habitsContainer.innerHTML = `
+            <div class="empty-state">
+              <i class="fas fa-list-check"></i>
+              <h3>${searchTerm ? 'Nenhum hábito encontrado' : 'Nenhum hábito criado ainda'}</h3>
+              <p>${searchTerm ? 'Tente buscar por outro termo' : 'Clique em "Novo Hábito" para começar'}</p>
+            </div>
+          `;
+          return;
+        }
+
+        this.habitsContainer.innerHTML = filteredHabits.map(habit => `
+          <div class="habit-item">
+            <div class="habit-info">
+              <label class="checkbox-container">
+                <input type="checkbox" class="checkbox" ${habit.completed ? 'checked' : ''} 
+                       onchange="habitTracker.toggleHabit(${habit.id})">
+                <svg viewBox="0 0 64 64" height="2em" width="2em">
+                  <path d="M 0 16 V 56 A 8 8 90 0 0 8 64 H 56 A 8 8 90 0 0 64 56 V 8 A 8 8 90 0 0 56 0 H 8 A 8 8 90 0 0 0 8 V 16 L 32 48 L 64 16 V 8 A 8 8 90 0 0 56 0 H 8 A 8 8 90 0 0 0 8 V 56 A 8 8 90 0 0 8 64 H 56 A 8 8 90 0 0 64 56 V 16" class="path"></path>
+                </svg>
+              </label>
+              <div class="habit-text">
+                <h4>${habit.name}</h4>
+                ${habit.description ? `<p>${habit.description}</p>` : ''}
+              </div>
+            </div>
+            <div style="display: flex; gap: 5px;">
+              <button class="delete-btn" onclick="habitTracker.openModal(${habit.id})" title="Editar hábito">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button class="delete-btn" onclick="habitTracker.deleteHabit(${habit.id})" title="Excluir hábito">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      updateStats() {
+        const total = this.habits.length;
+        const completed = this.habits.filter(h => h.completed).length;
+        const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+        
+        this.totalHabitsEl.textContent = total;
+        this.completedHabitsEl.textContent = completed;
+        this.completionRateEl.textContent = `${completionRate}%`;
+        
+        // Calculate streak (simplified - just based on completion rate)
+        const streak = completionRate === 100 ? Math.floor(Math.random() * 10) + 1 : 0;
+        this.currentStreakEl.textContent = streak;
+      }
+
+      setCurrentDate() {
+        const now = new Date();
+        const options = { 
+          weekday: 'long', 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        };
+        const dateString = now.toLocaleDateString('pt-BR', options);
+        document.getElementById('current-date').textContent = dateString;
+      }
+    }
+
+    // Initialize the habit tracker when the page loads
+    let habitTracker;
+    document.addEventListener('DOMContentLoaded', () => {
+      habitTracker = new HabitTracker();
+    });
+  </script>
+
+</body>
+</html>

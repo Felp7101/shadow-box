@@ -677,15 +677,15 @@
         <button class="close-btn" id="close-modal">&times;</button>
       </div>
       
-      <form id="habit-form">
+      <form  method="POST" action="/cadastrar" id="habit-form">
         <div class="form-group">
           <label for="habit-name">Nome do Hábito</label>
-          <input type="text" id="habit-name" required maxlength="50" placeholder="Ex: Beber 2L de água">
+          <input type="text" id="habit-name" required maxlength="50" placeholder="Ex: Beber 2L de água" name="nome">
         </div>
         
         <div class="form-group">
           <label for="habit-description">Descrição (opcional)</label>
-          <textarea id="habit-description" maxlength="100" placeholder="Ex: Manter-se hidratado durante o dia"></textarea>
+          <input id="habit-description" maxlength="100" placeholder="Ex: Manter-se hidratado durante o dia" name="descricao"></input>
         </div>
         
         <div class="modal-buttons">
@@ -866,7 +866,7 @@
       }
 
       handleSubmit(e) {
-        e.preventDefault();
+     
         
         const name = this.habitNameInput.value.trim();
         const description = this.habitDescriptionInput.value.trim();
